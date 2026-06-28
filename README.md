@@ -10,6 +10,8 @@ Used technologies:
   
   -MongoDB
 
+  
+
 Functionalities:
 
   -Schedule and post social gathering events such as parties and concerts within the city of Timisoara
