@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BegaVibe Backend Tester</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    h1, h2 {
+      margin: 0 0 8px;
+    }
+    h1 {
+      margin-bottom: 16px;
+    }
+    .section {
+      border-radius: 8px;
+      padding: 12px 16px 16px;
+      background: #020617;
+      box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.2);
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin: 6px 0 2px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    input {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+    button {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background: #6366f1;
+      color: #f9fafb;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    button + button {
+      margin-left: 8px;
+    }
+    pre {
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 4px;
+      background: #020617;
+      border: 1px solid #374151;
+      max-height: 260px;
+      overflow: auto;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    small {
+      color: #9ca3af;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>BegaVibe Backend Tester</h1>
+  <small>Assumes backend is running at <code>http://127.0.0.1:5000</code></small>
+
+  <div class="section">
+    <h2>Auth: Register / Login</h2>
+    <label>Email</label>
+    <input id="authEmail" type="email" placeholder="email@example.com" />
+
+    <label>Password</label>
+    <input id="authPassword" type="password" placeholder="your password" />
+
+    <div>
+      <button id="btnRegister">Register (POST /api/register)</button>
+      <button id="btnLogin">Login (POST /api/login)</button>
+    </div>
+
+    <small>Successful login will store the JWT token below.</small>
+    <pre id="authOutput"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Token (from login)</h2>
+    <pre id="tokenBox">(no token yet)</pre>
+  </div>
+
+  <div class="section">
+    <h2>Auth: Me / Organizer</h2>
+    <button id="btnGetMe">GET /api/me</button>
+    <pre id="meOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Update Me (PATCH /api/me)</h3>
+    <label>New Email (optional)</label>
+    <input id="updateMeEmail" type="email" placeholder="new-email@example.com" />
+
+    <label>New Password (optional)</label>
+    <input id="updateMePassword" type="password" placeholder="new password" />
+
+    <button id="btnUpdateMe">Update Me</button>
+    <pre id="updateMeOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Register Organizer (POST /api/organizers/register)</h3>
+    <label>Organizer Email</label>
+    <input id="orgEmail" type="email" placeholder="organizer@example.com" />
+
+    <label>Password</label>
+    <input id="orgPassword" type="password" placeholder="your password" />
+
+    <label>Organizer Name*</label>
+    <input id="orgName" placeholder="Organization name" />
+
+    <label>Phone</label>
+    <input id="orgPhone" placeholder="+40..." />
+
+    <label>Website</label>
+    <input id="orgWebsite" placeholder="https://..." />
+
+    <label>Description</label>
+    <input id="orgDescription" placeholder="Short description" />
+
+    <button id="btnRegisterOrganizer">Register Organizer</button>
+    <pre id="orgAuthOutput"></pre>
+
+    <h3 style="margin-top: 12px;">GET /api/organizers/me</h3>
+    <button id="btnGetOrganizerMe">Get Organizer Me</button>
+    <pre id="orgMeOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Update Organizer Profile (PATCH /api/organizers/me)</h3>
+    <small>Uses Organizer Name / Phone / Website / Description fields above.</small>
+    <button id="btnUpdateOrganizerMe">Update Organizer Profile</button>
+    <pre id="updateOrgMeOutput"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Events: List / Create</h2>
+    <button id="btnGetEvents">Get Events (GET /api/events)</button>
+    <pre id="eventsOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Get Event By ID (GET /api/events/:id)</h3>
+    <label>Event ID</label>
+    <input id="singleEventId" placeholder="MongoDB ObjectId" />
+    <button id="btnGetEventById">Get Event</button>
+    <pre id="singleEventOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Create Event (POST /api/events)</h3>
+    <label>Title*</label>
+    <input id="evTitle" placeholder="Event title" />
+
+    <label>Date* (YYYY-MM-DD)</label>
+    <input id="evDate" placeholder="2025-12-24" />
+
+    <label>Location Name*</label>
+    <input id="evLocation" placeholder="Some venue, Timisoara" />
+
+    <label>Image URL</label>
+    <input id="evImage" placeholder="https://..." />
+
+    <label>Category</label>
+    <input id="evCategory" placeholder="Festival / Concert / etc" />
+
+    <label>Price (e.g. 'Gratuit' or '50 RON')</label>
+    <input id="evPrice" placeholder="Gratuit" />
+
+    <label>Minimum Age (optional number)</label>
+    <input id="evMinAge" type="number" min="0" placeholder="18" />
+
+    <button id="btnCreateEvent">Create Event</button>
+    <pre id="createEventOutput"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Organizer Events</h2>
+    <button id="btnGetMyEvents">GET /api/organizers/me/events</button>
+    <pre id="myEventsOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Create My Event (POST /api/organizers/me/events)</h3>
+    <label>Title*</label>
+    <input id="myEvTitle" placeholder="Event title" />
+
+    <label>Date* (YYYY-MM-DD)</label>
+    <input id="myEvDate" placeholder="2025-12-24" />
+
+    <label>Location Name*</label>
+    <input id="myEvLocation" placeholder="Some venue, Timisoara" />
+
+    <label>Image URL</label>
+    <input id="myEvImage" placeholder="https://..." />
+
+    <label>Category</label>
+    <input id="myEvCategory" placeholder="Festival / Concert / etc" />
+
+    <label>Price</label>
+    <input id="myEvPrice" placeholder="Gratuit" />
+
+    <label>Minimum Age</label>
+    <input id="myEvMinAge" type="number" min="0" placeholder="18" />
+
+    <label>Status (draft/published)</label>
+    <input id="myEvStatus" placeholder="draft" />
+
+    <button id="btnCreateMyEvent">Create My Event</button>
+    <pre id="createMyEventOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Update Event (PATCH /api/events/:id)</h3>
+    <label>Event ID</label>
+    <input id="updateEventId" placeholder="MongoDB ObjectId" />
+    <label>New Title (optional)</label>
+    <input id="updateTitle" placeholder="New title" />
+    <label>New Date (optional)</label>
+    <input id="updateDate" placeholder="YYYY-MM-DD" />
+    <label>New Location Name (optional)</label>
+    <input id="updateLocation" placeholder="New location" />
+    <label>New Image URL (optional)</label>
+    <input id="updateImage" placeholder="https://..." />
+    <label>New Category (optional)</label>
+    <input id="updateCategory" placeholder="New category" />
+    <label>New Price (optional)</label>
+    <input id="updatePrice" placeholder="New price" />
+    <label>New Min Age (optional)</label>
+    <input id="updateMinAge" type="number" min="0" placeholder="18" />
+    <label>New Status (optional)</label>
+    <input id="updateStatus" placeholder="draft / published" />
+    <button id="btnUpdateEvent">Update Event</button>
+    <pre id="updateEventOutput"></pre>
+
+    <h3 style="margin-top: 12px;">Delete Event (DELETE /api/events/:id)</h3>
+    <label>Event ID</label>
+    <input id="deleteEventId" placeholder="MongoDB ObjectId" />
+    <button id="btnDeleteEvent">Delete Event</button>
+    <pre id="deleteEventOutput"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Tickets</h2>
+    <h3>Create Ticket (POST /api/tickets)</h3>
+    <label>Event ID</label>
+    <input id="ticketEventId" placeholder="MongoDB ObjectId" />
+
+    <label>Count</label>
+    <input id="ticketCount" type="number" min="1" value="1" />
+
+    <button id="btnCreateTicket">Create Ticket</button>
+    <pre id="createTicketOutput"></pre>
+
+    <h3 style="margin-top: 12px;">My Tickets (GET /api/my-tickets)</h3>
+    <button id="btnGetMyTickets">Get My Tickets</button>
+    <pre id="myTicketsOutput"></pre>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authOutput = document.getElementById('authOutput');
+    const tokenBox = document.getElementById('tokenBox');
+    const meOutput = document.getElementById('meOutput');
+    const updateMeEmail = document.getElementById('updateMeEmail');
+    const updateMePassword = document.getElementById('updateMePassword');
+    const updateMeOutput = document.getElementById('updateMeOutput');
+    const orgEmail = document.getElementById('orgEmail');
+    const orgPassword = document.getElementById('orgPassword');
+    const orgName = document.getElementById('orgName');
+    const orgPhone = document.getElementById('orgPhone');
+    const orgWebsite = document.getElementById('orgWebsite');
+    const orgDescription = document.getElementById('orgDescription');
+    const orgAuthOutput = document.getElementById('orgAuthOutput');
+    const orgMeOutput = document.getElementById('orgMeOutput');
+    const updateOrgMeOutput = document.getElementById('updateOrgMeOutput');
+
+    const eventsOutput = document.getElementById('eventsOutput');
+    const singleEventId = document.getElementById('singleEventId');
+    const singleEventOutput = document.getElementById('singleEventOutput');
+    const myEventsOutput = document.getElementById('myEventsOutput');
+    const createEventOutput = document.getElementById('createEventOutput');
+
+    const evTitle = document.getElementById('evTitle');
+    const evDate = document.getElementById('evDate');
+    const evLocation = document.getElementById('evLocation');
+    const evImage = document.getElementById('evImage');
+    const evCategory = document.getElementById('evCategory');
+    const evPrice = document.getElementById('evPrice');
+    const evMinAge = document.getElementById('evMinAge');
+
+    const myEvTitle = document.getElementById('myEvTitle');
+    const myEvDate = document.getElementById('myEvDate');
+    const myEvLocation = document.getElementById('myEvLocation');
+    const myEvImage = document.getElementById('myEvImage');
+    const myEvCategory = document.getElementById('myEvCategory');
+    const myEvPrice = document.getElementById('myEvPrice');
+    const myEvMinAge = document.getElementById('myEvMinAge');
+    const myEvStatus = document.getElementById('myEvStatus');
+    const createMyEventOutput = document.getElementById('createMyEventOutput');
+
+    const updateEventId = document.getElementById('updateEventId');
+    const updateTitle = document.getElementById('updateTitle');
+    const updateDate = document.getElementById('updateDate');
+    const updateLocation = document.getElementById('updateLocation');
+    const updateImage = document.getElementById('updateImage');
+    const updateCategory = document.getElementById('updateCategory');
+    const updatePrice = document.getElementById('updatePrice');
+    const updateMinAge = document.getElementById('updateMinAge');
+    const updateStatus = document.getElementById('updateStatus');
+    const updateEventOutput = document.getElementById('updateEventOutput');
+
+    const deleteEventId = document.getElementById('deleteEventId');
+    const deleteEventOutput = document.getElementById('deleteEventOutput');
+
+    const ticketEventId = document.getElementById('ticketEventId');
+    const ticketCount = document.getElementById('ticketCount');
+    const createTicketOutput = document.getElementById('createTicketOutput');
+    const myTicketsOutput = document.getElementById('myTicketsOutput');
+
+    let currentToken = null;
+
+    function setToken(token) {
+      currentToken = token || null;
+      if (currentToken) {
+        tokenBox.textContent = currentToken;
+      } else {
+        tokenBox.textContent = '(no token yet)';
+      }
+    }
+
+    async function doAuth(path) {
+      authOutput.textContent = 'Loading...';
+      try {
+        const res = await fetch(API_BASE + path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: authEmail.value,
+            password: authPassword.value,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        authOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+        if (res.ok && data.token) {
+          setToken(data.token);
+        }
+      } catch (err) {
+        authOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function getMe() {
+      meOutput.textContent = 'Loading...';
+      try {
+        const headers = {};
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/me', { headers });
+        const data = await res.json().catch(() => ({}));
+        meOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        meOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function updateMeProfile() {
+      updateMeOutput.textContent = 'Sending...';
+
+      const payload = {};
+      const email = updateMeEmail.value.trim();
+      const password = updateMePassword.value;
+
+      if (email) {
+        payload.email = email;
+      }
+      if (password) {
+        payload.password = password;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        updateMeOutput.textContent = 'Nothing to update.';
+        return;
+      }
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/me', {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        updateMeOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+        if (res.ok && data.token) {
+          setToken(data.token);
+        }
+      } catch (err) {
+        updateMeOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function registerOrganizer() {
+      orgAuthOutput.textContent = 'Sending...';
+      try {
+        const res = await fetch(API_BASE + '/api/organizers/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: orgEmail.value,
+            password: orgPassword.value,
+            orgName: orgName.value,
+            phone: orgPhone.value || undefined,
+            website: orgWebsite.value || undefined,
+            description: orgDescription.value || undefined,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        orgAuthOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+        if (res.ok && data.token) {
+          setToken(data.token);
+        }
+      } catch (err) {
+        orgAuthOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function getOrganizerMe() {
+      orgMeOutput.textContent = 'Loading...';
+      try {
+        const headers = {};
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/organizers/me', { headers });
+        const data = await res.json().catch(() => ({}));
+        orgMeOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        orgMeOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function updateOrganizerProfile() {
+      updateOrgMeOutput.textContent = 'Sending...';
+
+      const payload = {};
+      if (orgName.value.trim()) payload.orgName = orgName.value;
+      if (orgPhone.value.trim()) payload.phone = orgPhone.value;
+      if (orgWebsite.value.trim()) payload.website = orgWebsite.value;
+      if (orgDescription.value.trim()) payload.description = orgDescription.value;
+
+      if (Object.keys(payload).length === 0) {
+        updateOrgMeOutput.textContent = 'Nothing to update.';
+        return;
+      }
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/organizers/me', {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        updateOrgMeOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        updateOrgMeOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function getEvents() {
+      eventsOutput.textContent = 'Loading...';
+      try {
+        const res = await fetch(API_BASE + '/api/events');
+        const data = await res.json().catch(() => ({}));
+        eventsOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        eventsOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function createEvent() {
+      createEventOutput.textContent = 'Sending...';
+      const minAgeValue = evMinAge.value.trim();
+
+      const payload = {
+        title: evTitle.value,
+        date: evDate.value,
+        locationName: evLocation.value,
+        imageUrl: evImage.value || undefined,
+        category: evCategory.value || undefined,
+        price: evPrice.value || undefined,
+        minAge: minAgeValue === '' ? null : Number(minAgeValue),
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/api/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        createEventOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        createEventOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function getEventById() {
+      singleEventOutput.textContent = 'Loading...';
+      const id = singleEventId.value.trim();
+      if (!id) {
+        singleEventOutput.textContent = 'Please provide an event ID.';
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + '/api/events/' + encodeURIComponent(id));
+        const data = await res.json().catch(() => ({}));
+        singleEventOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        singleEventOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function getMyEvents() {
+      myEventsOutput.textContent = 'Loading...';
+      try {
+        const headers = {};
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/organizers/me/events', { headers });
+        const data = await res.json().catch(() => ({}));
+        myEventsOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        myEventsOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function createMyEvent() {
+      createMyEventOutput.textContent = 'Sending...';
+      const minAgeValue = myEvMinAge.value.trim();
+
+      const payload = {
+        title: myEvTitle.value,
+        date: myEvDate.value,
+        locationName: myEvLocation.value,
+        imageUrl: myEvImage.value || undefined,
+        category: myEvCategory.value || undefined,
+        price: myEvPrice.value || undefined,
+        minAge: minAgeValue === '' ? null : Number(minAgeValue),
+        status: myEvStatus.value || 'draft',
+      };
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/organizers/me/events', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        createMyEventOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        createMyEventOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function updateEventById() {
+      updateEventOutput.textContent = 'Sending...';
+      const id = updateEventId.value.trim();
+      if (!id) {
+        updateEventOutput.textContent = 'Please provide an event ID.';
+        return;
+      }
+
+      const payload = {};
+      if (updateTitle.value.trim()) payload.title = updateTitle.value;
+      if (updateDate.value.trim()) payload.date = updateDate.value;
+      if (updateLocation.value.trim()) payload.locationName = updateLocation.value;
+      if (updateImage.value.trim()) payload.imageUrl = updateImage.value;
+      if (updateCategory.value.trim()) payload.category = updateCategory.value;
+      if (updatePrice.value.trim()) payload.price = updatePrice.value;
+      if (updateMinAge.value.trim()) payload.minAge = Number(updateMinAge.value);
+      if (updateStatus.value.trim()) payload.status = updateStatus.value;
+
+      if (Object.keys(payload).length === 0) {
+        updateEventOutput.textContent = 'Nothing to update.';
+        return;
+      }
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/events/' + encodeURIComponent(id), {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        updateEventOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        updateEventOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function deleteEventById() {
+      deleteEventOutput.textContent = 'Sending...';
+      const id = deleteEventId.value.trim();
+      if (!id) {
+        deleteEventOutput.textContent = 'Please provide an event ID.';
+        return;
+      }
+      try {
+        const headers = {};
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/events/' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers,
+        });
+        const data = await res.json().catch(() => ({}));
+        deleteEventOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        deleteEventOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function createTicket() {
+      createTicketOutput.textContent = 'Sending...';
+      const id = ticketEventId.value.trim();
+      const countRaw = ticketCount.value;
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/tickets', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            eventId: id,
+            count: Number(countRaw) || 1,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        createTicketOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        createTicketOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function getMyTickets() {
+      myTicketsOutput.textContent = 'Loading...';
+      try {
+        const headers = {};
+        if (currentToken) {
+          headers['Authorization'] = 'Bearer ' + currentToken;
+        }
+        const res = await fetch(API_BASE + '/api/my-tickets', { headers });
+        const data = await res.json().catch(() => ({}));
+        myTicketsOutput.textContent =
+          'Status: ' + res.status + ' ' + res.statusText + '\\n' +
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        myTicketsOutput.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    document.getElementById('btnRegister').addEventListener('click', () => doAuth('/api/register'));
+    document.getElementById('btnLogin').addEventListener('click', () => doAuth('/api/login'));
+    document.getElementById('btnGetMe').addEventListener('click', getMe);
+    document.getElementById('btnRegisterOrganizer').addEventListener('click', registerOrganizer);
+    document.getElementById('btnGetOrganizerMe').addEventListener('click', getOrganizerMe);
+    document.getElementById('btnUpdateMe').addEventListener('click', updateMeProfile);
+    document.getElementById('btnUpdateOrganizerMe').addEventListener('click', updateOrganizerProfile);
+
+    document.getElementById('btnGetEvents').addEventListener('click', getEvents);
+    document.getElementById('btnGetEventById').addEventListener('click', getEventById);
+    document.getElementById('btnCreateEvent').addEventListener('click', createEvent);
+
+    document.getElementById('btnGetMyEvents').addEventListener('click', getMyEvents);
+    document.getElementById('btnCreateMyEvent').addEventListener('click', createMyEvent);
+    document.getElementById('btnUpdateEvent').addEventListener('click', updateEventById);
+    document.getElementById('btnDeleteEvent').addEventListener('click', deleteEventById);
+
+    document.getElementById('btnCreateTicket').addEventListener('click', createTicket);
+    document.getElementById('btnGetMyTickets').addEventListener('click', getMyTickets);
+  </script>
+</body>
+</html>
